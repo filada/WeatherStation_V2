@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <DallasTemperature.h>
-#include "AS5600.h"
+#include <AS5600.h> // ""
+#include <AM2302-Sensor.h>
 
 #define I2C_SDA 21
 #define I2C_SCL 22
@@ -9,12 +10,14 @@
 #define BAT_ADC 34
 #define DS18B20_Pin 16
 #define WindSpeed_Pin 27
+constexpr unsigned int DHT_pin {17U}; // constexpr unsigned int DHT {7U};
 
 #define CIRCUMFERENCE 0.565
 
 OneWire oneWire(DS18B20_Pin);
 DallasTemperature DS18B20(&oneWire);
 AS5600 WindDirSensor;
+AM2302::AM2302_Sensor am2302{DHT_pin};
 
 volatile unsigned int pulseCount = 0;
 volatile unsigned long lastPulseTime = 0; // Čas posledního impulzu
@@ -85,6 +88,7 @@ void setup() {
   digitalWrite(SensorsSW, LOW);
   Serial.println("Sensor power enabled");
   WindDirSensor.begin();
+  am2302.begin(); ////////////
   WindDirSensor.setDirection(AS5600_CLOCK_WISE);
   Serial.print("AS5600 address: "); Serial.println(WindDirSensor.getAddress());
 }
@@ -94,5 +98,8 @@ void loop() {
   Serial.print("Battery Voltage: "); Serial.print(readBatteryVoltage()); Serial.println("V");
   Serial.print("Wind Speed: "); Serial.print(readWindSpeed()); Serial.println(" m/s");
   Serial.print("Wind DirectionAngle: "); Serial.print(readWindDirectionAngle()); Serial.println(" degrees");
-  delay(100);
+  am2302.read();
+  Serial.println(am2302.get_Temperature());
+  Serial.println(am2302.get_Humidity());
+  delay(2000);
 }
