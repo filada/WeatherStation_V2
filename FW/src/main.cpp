@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <DallasTemperature.h>
-#include <AS5600.h> // ""
+#include <AS5600.h>
 #include <AM2302-Sensor.h>
+// #include <Adafruit_Sensor.h>
+// #include <Adafruit_BMP280.h>
 
 #define I2C_SDA 21
 #define I2C_SCL 22
@@ -10,14 +12,18 @@
 #define BAT_ADC 34
 #define DS18B20_Pin 16
 #define WindSpeed_Pin 27
-constexpr unsigned int DHT_pin {17U}; // constexpr unsigned int DHT {7U};
+constexpr unsigned int DHT_pin {17U}; 
+// #define BMP280_Adress (0x76)
 
 #define CIRCUMFERENCE 0.565
+int pressure_correction = 0;
+int SerialDEBUG = 1;
 
 OneWire oneWire(DS18B20_Pin);
 DallasTemperature DS18B20(&oneWire);
 AS5600 WindDirSensor;
 AM2302::AM2302_Sensor am2302{DHT_pin};
+// Adafruit_BMP280 bmp;
 
 volatile unsigned int pulseCount = 0;
 volatile unsigned long lastPulseTime = 0; // Čas posledního impulzu
@@ -91,15 +97,23 @@ void setup() {
   am2302.begin(); ////////////
   WindDirSensor.setDirection(AS5600_CLOCK_WISE);
   Serial.print("AS5600 address: "); Serial.println(WindDirSensor.getAddress());
+  // if (!bmp.begin()){
+  //   Serial.println("ERROR: BMP280 not detected!");
+  // }
 }
 
 void loop() {
+  if (SerialDEBUG=1){
   Serial.print("Temperature: "); Serial.print(readTemperature()); Serial.println("C");
   Serial.print("Battery Voltage: "); Serial.print(readBatteryVoltage()); Serial.println("V");
   Serial.print("Wind Speed: "); Serial.print(readWindSpeed()); Serial.println(" m/s");
   Serial.print("Wind DirectionAngle: "); Serial.print(readWindDirectionAngle()); Serial.println(" degrees");
   am2302.read();
-  Serial.println(am2302.get_Temperature());
-  Serial.println(am2302.get_Humidity());
+  Serial.print("DHT22 Temp: "); Serial.println(am2302.get_Temperature());
+  Serial.print("DHT22 Humidity: "); Serial.println(am2302.get_Humidity());
+
+  // Serial.print("BMP280 Temp: "); Serial.println(bmp.readTemperature());
+  // Serial.print("BMP280 Pressure: "); Serial.println((bmp.readPressure()/100)+pressure_correction);
+  }
   delay(2000);
 }
